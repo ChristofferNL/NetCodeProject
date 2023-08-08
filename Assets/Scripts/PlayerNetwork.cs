@@ -1,17 +1,35 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using Unity.Netcode;
 using UnityEngine;
 
 public class PlayerNetwork : NetworkBehaviour
 {
-    NetworkVariable<int> randomNumber = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    NetworkVariable<MyCustomData> randomNumber = new NetworkVariable<MyCustomData>(
+        new MyCustomData
+        {
+            _int = 43,
+            _bool = true,
+        }, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
+    public struct MyCustomData : INetworkSerializable
+    {
+        public int _int;
+        public bool _bool;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref _int);
+            serializer.SerializeValue(ref _bool);
+        }
+    }
 
     public override void OnNetworkSpawn()
     {
-        randomNumber.OnValueChanged += (int previousValue, int newValue) =>
+        randomNumber.OnValueChanged += (MyCustomData previousValue, MyCustomData newValue) =>
         {
-            Debug.Log($"ID:{OwnerClientId} Value:{randomNumber.Value}");
+            Debug.Log($"ID:{OwnerClientId} Int:{newValue._int} Bool:{newValue._bool}");
         };
     }
 
@@ -31,7 +49,11 @@ public class PlayerNetwork : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.T))
         {
-            randomNumber.Value = Random.Range(0, 100);
+            randomNumber.Value = new MyCustomData
+            {
+                _int = UnityEngine.Random.Range(0, 100),
+                _bool = !randomNumber.Value._bool,
+            };
         }
     }
 }
