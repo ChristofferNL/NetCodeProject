@@ -6,6 +6,9 @@ using UnityEngine;
 
 public class PlayerNetwork : NetworkBehaviour
 {
+    [SerializeField] Transform spawnedObjectPrefab;
+    Transform spawnedObjectTransform;
+
     NetworkVariable<MyCustomData> randomNumber = new NetworkVariable<MyCustomData>(
         new MyCustomData
         {
@@ -49,13 +52,28 @@ public class PlayerNetwork : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.T))
         {
-            TestClientRpc(new ClientRpcParams {  Send = new ClientRpcSendParams { TargetClientIds = new List<ulong> { 1 } } });
+            if (IsHost)
+            {
+                spawnedObjectTransform = Instantiate(spawnedObjectPrefab);
+                spawnedObjectTransform.GetComponent<NetworkObject>().Spawn(true); // only server can use Spawn!
+            }
+
+            //TestClientRpc(new ClientRpcParams {  Send = new ClientRpcSendParams { TargetClientIds = new List<ulong> { 1 } } }); // choose which clients receives the call
             //TestServerRpc(new ServerRpcParams());
             //randomNumber.Value = new MyCustomData
             //{
             //    _int = UnityEngine.Random.Range(0, 100),
             //    _bool = !randomNumber.Value._bool,
             //};
+        }
+
+        if (Input.GetKeyDown(KeyCode.Y))
+        {
+            if (spawnedObjectTransform != null)
+            {
+                //Destroy(spawnedObjectTransform.gameObject);
+                spawnedObjectTransform.GetComponent<NetworkObject>().Despawn(false); // can despawn from the network but keep the object in the scene
+            }
         }
     }
 
