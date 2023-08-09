@@ -49,11 +49,25 @@ public class PlayerNetwork : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.T))
         {
-            randomNumber.Value = new MyCustomData
-            {
-                _int = UnityEngine.Random.Range(0, 100),
-                _bool = !randomNumber.Value._bool,
-            };
+            TestClientRpc(new ClientRpcParams {  Send = new ClientRpcSendParams { TargetClientIds = new List<ulong> { 1 } } });
+            //TestServerRpc(new ServerRpcParams());
+            //randomNumber.Value = new MyCustomData
+            //{
+            //    _int = UnityEngine.Random.Range(0, 100),
+            //    _bool = !randomNumber.Value._bool,
+            //};
         }
+    }
+
+    [ServerRpc] // message to the server
+    void TestServerRpc(ServerRpcParams serverRpcParams)
+    {
+        Debug.Log($"TestServerRpc {OwnerClientId} SenderClientID:{serverRpcParams.Receive.SenderClientId}");
+    }
+
+    [ClientRpc]
+    void TestClientRpc(ClientRpcParams clientRpcParams) // message from the server to the clients
+    {
+        Debug.Log($"TestServerRpc {OwnerClientId}");
     }
 }
