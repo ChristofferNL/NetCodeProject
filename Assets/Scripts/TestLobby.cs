@@ -9,6 +9,9 @@ using UnityEngine;
 
 public class TestLobby : MonoBehaviour
 {
+    const float HEART_BEAT_INTERVAL_SECONDS = 15;
+    Lobby hostLobby;
+    float heartBeatTimer = 0;
     private async void Start()
     {
         await UnityServices.InitializeAsync();
@@ -21,13 +24,20 @@ public class TestLobby : MonoBehaviour
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
     }
 
-    public async void CreateLobby()
+	private void Update()
+	{
+        LobbyHeartbeatTimer();
+	}
+
+	public async void CreateLobby()
     {
         try
         {
             string lobbyName = "testLobby";
             int maxPlayers = 2;
             Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers);
+
+            hostLobby = lobby;
 
             Debug.Log($"Created lobby! ID:{lobby.Id} Name:{lobby.Name} Players:{lobby.MaxPlayers}");
 
@@ -55,7 +65,7 @@ public class TestLobby : MonoBehaviour
                 }
             };
 
-            QueryResponse queryResponse = await Lobbies.Instance.QueryLobbiesAsync();
+            QueryResponse queryResponse = await Lobbies.Instance.QueryLobbiesAsync(queryLobbiesOptions);
             Debug.Log($"Lobbies found: {queryResponse.Results.Count}");
 
             foreach (var lobby in queryResponse.Results)
@@ -66,6 +76,17 @@ public class TestLobby : MonoBehaviour
         catch (LobbyServiceException e)
         {
             Debug.LogError(e);
+        }
+    }
+
+    async void LobbyHeartbeatTimer()
+    {
+        if (hostLobby == null) return;
+        heartBeatTimer += Time.deltaTime;
+        if (heartBeatTimer > HEART_BEAT_INTERVAL_SECONDS)
+        {
+            heartBeatTimer = 0;
+            await LobbyService.Instance.SendHeartbeatPingAsync(hostLobby.Id);
         }
     }
 }
