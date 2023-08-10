@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.Mathematics;
 using Unity.Netcode;
 using UnityEngine;
@@ -52,14 +53,15 @@ public class PlayerNetwork : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.T))
         {
-            if (IsHost)
-            {
-                spawnedObjectTransform = Instantiate(spawnedObjectPrefab);
-                spawnedObjectTransform.GetComponent<NetworkObject>().Spawn(true); // only server can use Spawn!
-            }
 
-            //TestClientRpc(new ClientRpcParams {  Send = new ClientRpcSendParams { TargetClientIds = new List<ulong> { 1 } } }); // choose which clients receives the call
-            //TestServerRpc(new ServerRpcParams());
+            //if (IsHost)
+            //{
+            //    spawnedObjectTransform = Instantiate(spawnedObjectPrefab);
+            //    spawnedObjectTransform.GetComponent<NetworkObject>().Spawn(true); // only server can use Spawn!
+            //}
+
+            /*  TestClientRpc(new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new List<ulong> { 0, 1 } } });*/ // choose which clients receives the call
+            TestServerRpc(new ServerRpcParams());
             //randomNumber.Value = new MyCustomData
             //{
             //    _int = UnityEngine.Random.Range(0, 100),
@@ -80,12 +82,21 @@ public class PlayerNetwork : NetworkBehaviour
     [ServerRpc] // message to the server
     void TestServerRpc(ServerRpcParams serverRpcParams)
     {
+        TestClientRpc("Blue", "Red", new ClientRpcParams());
         Debug.Log($"TestServerRpc {OwnerClientId} SenderClientID:{serverRpcParams.Receive.SenderClientId}");
     }
 
     [ClientRpc]
-    void TestClientRpc(ClientRpcParams clientRpcParams) // message from the server to the clients
+    void TestClientRpc(string colorOne, string colorTwo, ClientRpcParams clientRpcParams) // message from the server to the clients
     {
         Debug.Log($"TestServerRpc {OwnerClientId}");
+        if (IsOwner)
+        {
+            FindObjectOfType<NetworkManagerUI>().SetTargetTexts(colorOne, colorTwo);
+        }
+        else
+        {
+            FindObjectOfType<NetworkManagerUI>().SetTargetTexts(colorTwo, colorOne);
+        }
     }
 }
