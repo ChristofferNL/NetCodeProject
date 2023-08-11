@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -12,8 +13,15 @@ using UnityEngine;
 
 public class TestRelay : MonoBehaviour
 {
-    [SerializeField] TextMeshProUGUI joinCodeText;
-    [SerializeField] TMP_InputField inputFieldText;   
+    //[SerializeField] TextMeshProUGUI joinCodeText;
+    //[SerializeField] TMP_InputField inputFieldText;   
+
+    public static TestRelay Instance;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     private async void Start()
     {
@@ -26,7 +34,7 @@ public class TestRelay : MonoBehaviour
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
     }
 
-    public async void CreateRelay()
+    public async Task<string> CreateRelay()
     {
         try
         {
@@ -34,25 +42,28 @@ public class TestRelay : MonoBehaviour
 
             string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
             Debug.Log($"Code to join: {joinCode}");
-            joinCodeText.text = joinCode;
+            //joinCodeText.text = joinCode;
 
             RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
 
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
             NetworkManager.Singleton.StartHost();
+
+            return joinCode;
         }
         catch (RelayServiceException e)
         {
             Debug.LogError(e);
+            return null;
         }
     }
 
-    public async void JoinRelay()
+    public async void JoinRelay(string joinCode)
     {
         try
         {
-            Debug.Log($"Joining Relay with {inputFieldText.text}");
-            JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(inputFieldText.text);
+            Debug.Log($"Joining Relay with {joinCode}");
+            JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
 
             RelayServerData relayServerData = new RelayServerData(joinAllocation, "dtls");
 
