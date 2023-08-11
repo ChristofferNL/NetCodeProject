@@ -195,7 +195,7 @@ public class TestLobby : MonoBehaviour
             {
                 Data = new Dictionary<string, PlayerDataObject>
                 {
-                        { "PlayerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, playerName) }
+                    { "PlayerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, playerName) }
                 }
             });
         }
